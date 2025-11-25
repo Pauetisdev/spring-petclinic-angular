@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        // Configuración exacta que pediste: node-20
+        // Tu configuración actual
         nodejs 'node-20'
     }
 
@@ -10,20 +10,21 @@ pipeline {
         stage('1. Checkout Code') {
             steps {
                 cleanWs()
-                // Descarga TU repositorio del frontend
+                // Tu repositorio
                 git url: 'https://github.com/Pauetisdev/spring-petclinic-angular.git', branch: 'master'
             }
         }
 
         stage('2. Install & Test') {
             steps {
-                // 1. Instalar dependencias
-                sh "npm ci"
+                // FIX CRÍTICO: Cambiamos 'npm ci' por 'npm install --force'
+                // Esto ignora la incompatibilidad de versiones con Node 20
+                sh "npm install --force"
                 
-                // 2. Ejecutar tests y generar cobertura (crea la carpeta /coverage)
+                // Ejecuta tests
                 sh "npm run test -- --watch=false --code-coverage"
                 
-                // 3. GUARDAR EL REPORTE HTML (Importante: /** guarda archivos y estilos)
+                // Guarda el reporte
                 archiveArtifacts artifacts: 'coverage/**', allowEmptyArchive: true
             }
         }
@@ -34,8 +35,6 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('LocalSonar') {
-                    // Ejecuta el escáner. 
-                    // Requiere que tengas el archivo sonar-project.properties en la raíz del repo
                     sh "sonar-scanner"
                 }
             }
