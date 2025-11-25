@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        // Tu configuración actual
+        // Mantenemos tu configuración de node-20
         nodejs 'node-20'
     }
 
@@ -17,8 +17,10 @@ pipeline {
 
         stage('2. Install & Test') {
             steps {
-                // FIX CRÍTICO: Cambiamos 'npm ci' por 'npm install --force'
-                // Esto ignora la incompatibilidad de versiones con Node 20
+                // FIX 1: Borramos carpeta node_modules por si tiene permisos corruptos
+                sh "rm -rf node_modules"
+
+                // FIX 2: Usamos install --force para evitar el error de versión y permisos de 'ci'
                 sh "npm install --force"
                 
                 // Ejecuta tests
