@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     tools {
-        // Mantenemos tu configuración de node-20
         nodejs 'node-20'
     }
 
@@ -10,23 +9,26 @@ pipeline {
         stage('1. Checkout Code') {
             steps {
                 cleanWs()
-                // Tu repositorio
                 git url: 'https://github.com/Pauetisdev/spring-petclinic-angular.git', branch: 'master'
             }
         }
 
         stage('2. Install & Test') {
             steps {
-                // FIX 1: Borramos carpeta node_modules por si tiene permisos corruptos
-                sh "rm -rf node_modules"
+                // 1. Limpieza
+                sh "rm -rf node_modules package-lock.json"
+                sh "npm cache clean --force"
 
-                // FIX 2: Usamos install --force para evitar el error de versión y permisos de 'ci'
-                sh "npm install --force"
+                // 2. Instalación general
+                sh "npm install --force --legacy-peer-deps"
                 
-                // Ejecuta tests
+                // 3. FIX DEL ERROR: Instalamos el reportero de cobertura manualmente
+                sh "npm install karma-coverage --save-dev --force"
+
+                // 4. Tests
                 sh "npm run test -- --watch=false --code-coverage"
                 
-                // Guarda el reporte
+                // 5. Guardar reporte
                 archiveArtifacts artifacts: 'coverage/**', allowEmptyArchive: true
             }
         }
