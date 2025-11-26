@@ -15,21 +15,24 @@ pipeline {
 
         stage('2. Install & Test') {
             steps {
-                // 1. Limpieza TOTAL
+                // 1. Limpieza nuclear
                 sh "rm -rf node_modules package-lock.json"
                 sh "npm cache clean --force"
 
-                // 2. Instalación base del proyecto
+                // 2. Instalación forzada de dependencias
                 sh "npm install --force --legacy-peer-deps"
                 
-                // 3. FIX FINAL: Instalamos la versión EXACTA de karma-coverage compatible con Angular 11 (año 2020)
-                // La versión moderna falla con Node 20 + Angular viejo. La 2.0.3 funciona.
-                sh "npm install karma-coverage@2.0.3 --save-dev --force"
+                // 3. Instalamos el plugin de cobertura
+                sh "npm install karma-coverage --save-dev --force"
 
-                // 4. Ejecutar tests
+                // 4. TRUCO FINAL (PATCH): Modificamos karma.conf.js para registrar el plugin a la fuerza
+                // Buscamos dónde empieza la lista 'plugins: [' y le metemos 'require("karma-coverage"),'
+                sh "find . -name karma.conf.js -exec sed -i \"s|plugins: \\[|plugins: [ require('karma-coverage'),|\" {} +"
+
+                // 5. Ejecutar tests (ahora sí encontrará el reporter)
                 sh "npm run test -- --watch=false --code-coverage --browsers=ChromeHeadless"
                 
-                // 5. Guardar reporte
+                // 6. Guardar reporte
                 archiveArtifacts artifacts: 'coverage/**', allowEmptyArchive: true
             }
         }
