@@ -15,18 +15,20 @@ pipeline {
 
         stage('2. Install & Test') {
             steps {
-                // 1. Limpieza
+                // 1. Limpieza nuclear
                 sh "rm -rf node_modules package-lock.json"
                 sh "npm cache clean --force"
 
-                // 2. Instalación general
+                // 2. Instalación base forzada
                 sh "npm install --force --legacy-peer-deps"
                 
-                // 3. FIX DEL ERROR: Instalamos el reportero de cobertura manualmente
-                sh "npm install karma-coverage --save-dev --force"
+                // 3. FIX MAESTRO: Instalamos manualmente los plugins de cobertura y actualizamos jasmine-core
+                // Esto arregla la incompatibilidad del reporter "coverage"
+                sh "npm install karma-coverage karma-coverage-istanbul-reporter jasmine-core --save-dev --force"
 
-                // 4. Tests
-                sh "npm run test -- --watch=false --code-coverage"
+                // 4. Ejecutar tests (Usamos ChromeHeadless para evitar errores gráficos en Docker)
+                // Si ChromeHeadless falla, Jenkins probará Chrome normal, pero este es más seguro.
+                sh "npm run test -- --watch=false --code-coverage --browsers=ChromeHeadless"
                 
                 // 5. Guardar reporte
                 archiveArtifacts artifacts: 'coverage/**', allowEmptyArchive: true
