@@ -15,19 +15,18 @@ pipeline {
 
         stage('2. Install & Test') {
             steps {
-                // 1. Limpieza nuclear
+                // 1. Limpieza TOTAL
                 sh "rm -rf node_modules package-lock.json"
                 sh "npm cache clean --force"
 
-                // 2. Instalación base forzada
+                // 2. Instalación base del proyecto
                 sh "npm install --force --legacy-peer-deps"
                 
-                // 3. FIX MAESTRO: Instalamos manualmente los plugins de cobertura y actualizamos jasmine-core
-                // Esto arregla la incompatibilidad del reporter "coverage"
-                sh "npm install karma-coverage karma-coverage-istanbul-reporter jasmine-core --save-dev --force"
+                // 3. FIX FINAL: Instalamos la versión EXACTA de karma-coverage compatible con Angular 11 (año 2020)
+                // La versión moderna falla con Node 20 + Angular viejo. La 2.0.3 funciona.
+                sh "npm install karma-coverage@2.0.3 --save-dev --force"
 
-                // 4. Ejecutar tests (Usamos ChromeHeadless para evitar errores gráficos en Docker)
-                // Si ChromeHeadless falla, Jenkins probará Chrome normal, pero este es más seguro.
+                // 4. Ejecutar tests
                 sh "npm run test -- --watch=false --code-coverage --browsers=ChromeHeadless"
                 
                 // 5. Guardar reporte
